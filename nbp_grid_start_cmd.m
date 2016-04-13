@@ -7,6 +7,7 @@ function [] = nbp_grid_start_cmd(cmd,varargin)
 %   'jobnum' : (default = 1), could be a string '1:10' or a single number
 %   'requ'	 : Requirements for the grid (-l);  default:'mem=4G'
 %		       e.g.: num_proc=8,exclusive=true,mem=40G
+%   'runDir' : The directory that the script should run from
 %   'out'	 : Output file path (error and output log); default = pwd;
 % Example:
 % nbp_grid_start_cmd('cmd','my_super_script','jobnum',5,'requ',[],'out','/net/store/nbp/EEG/blind_spot/gridOutput')
@@ -36,6 +37,7 @@ g = be_inputcheck(varargin,...
 {'jobnum','','',1;
 'requ','string','','mem=4G';
 'parallel','integer',[],1;
+'runDir','string','',pwd;
 'out','string','',''});
 
 if ischar(g)
@@ -48,8 +50,8 @@ end
 requirements = g.requ;
 
 
-scriptDir = which('nbp_grid_start_cmd.m');
-scriptDir = fileparts(scriptDir);
+g.scriptDir = which('nbp_grid_start_cmd.m');
+g.scriptDir = fileparts(g.scriptDir);
 
 if isempty(g.out)
     g.out = fullfile(pwd,'grid_output');
@@ -95,8 +97,8 @@ if ~isempty('requirements')
 end
 
 shcmd = [];
-shcmd = [shcmd 'cd ' scriptDir ';'];
-shcmd = [shcmd 'qsub -cwd -t ' g.jobnum ' -o '  g.out '/ -e '  g.out '/ ' g.requ ' -N ' g.job_name ' -pe matlab ' num2str(g.parallel) ' nbp_grid_shell_start_matlab.sh'];
+shcmd = [shcmd 'cd ' g.runDir ';'];
+shcmd = [shcmd 'qsub -cwd -t ' g.jobnum ' -o '  g.out '/ -e '  g.out '/ ' g.requ ' -N ' g.job_name ' -pe matlab ' num2str(g.parallel) ' ',fullfile(g.scriptDir,'nbp_grid_shell_start_matlab.sh')];
 
 fprintf('\n%s \n',shcmd) %debug, for real result ucomment
 [status,result] = system(shcmd);
