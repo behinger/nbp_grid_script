@@ -1,17 +1,26 @@
 function [] = nbp_grid_start_cmd(cmd,varargin)
-%% NBP_grid_start_cmd('prop1',arg1,...)
-%   'cmd'	:  The command executed on the grid
-%   'name'	: The name for the gridjob; default = 'nbp_grid'
-%   'jobnum'	: The Jobnumber (use this for multiple jobs at the same time!); default = 1
-%   'requ'	: Requirements for the grid (-l);  default exclusie=true
-%		 e.g.: num_proc=8,exclusive=true,mem=40G
-%   'out'	: Output file path (error and output log); default = pwd;
+%% NBP_grid_start_cmd(cmd,'prop1',arg1,...)
+% The name of the script is used to identify scripts, thus it is not
+% possible to give a custom name at this point in time.
+%
+%   'cmd'	 :  The command executed on the grid
+%   'jobnum' : (default = 1), could be a string '1:10' or a single number
+%   'requ'	 : Requirements for the grid (-l);  default:'mem=4G'
+%		       e.g.: num_proc=8,exclusive=true,mem=40G
+%   'out'	 : Output file path (error and output log); default = pwd;
 % Example:
-% nbp_grid_start_cmd('cmd','my_super_script','name','ICAsim','jobnum',5,'requ',[],'out','/net/store/nbp/EEG/blind_spot/gridOutput')
+% nbp_grid_start_cmd('cmd','my_super_script','jobnum',5,'requ',[],'out','/net/store/nbp/EEG/blind_spot/gridOutput')
 %
 % Why should you use this instead of putting it directly on the grid?
-% You can run things like nbp_grid_start_cmd('cmd','randi(10,100,1)'), functions directly with arguments without the need to put them in a script first.
-% You can also run scripts nbp_grid_start_cmd('cmd','my_super_gridscript') which has the same functionality as putting it on the grid manualy.
+% You can run things like nbp_grid_start_cmd('randi(10,100,1)'), functions directly with arguments without the need to put them in a script first.
+% You can also run scripts nbp_grid_start_cmd('my_super_gridscript') which has the same functionality as putting it on the grid manualy.
+%
+%Update 13.04.16:
+% Completly revamped the script, made it work with only two files. The
+% JOB_NAME is now used to identify jobs, thus no more duplicated files
+% etc.
+% The script was put on github & the code streamlined
+%
 %Update 08.04.14:
 % 1) Updated to the new Grid Engine
 % 2) requ 'mem' is now mandatory!
@@ -34,7 +43,7 @@ if ischar(g)
 end
 
 if ~ischar(g.jobnum)
-    t = num2str(g.jobnum);
+    g.jobnum = num2str(g.jobnum);
 end
 requirements = g.requ;
 
@@ -60,8 +69,8 @@ numRands = length(s);
 sLength = 10;
 randString = s( ceil(rand(1,sLength)*numRands) );
 
-cfg.job_name = ['nbp_' randString];
-runtime_grid_file =  fullfile(g.out,[cfg.job_name '.m']);
+g.job_name = ['nbp_' randString];
+runtime_grid_file =  fullfile(g.out,[g.job_name '.m']);
 
 if exist(runtime_grid_file,'file')
     if strcmp(input(sprintf('The file %s already exists. Delete it? (y/n): ',runtime_grid_file),'s'),'y')
@@ -87,7 +96,7 @@ end
 
 shcmd = [];
 shcmd = [shcmd 'cd ' scriptDir ';'];
-shcmd = [shcmd 'qsub -cwd -t ' t ' -o '  g.out '/ -e '  g.out '/ ' g.requ ' -N ' cfg.job_name ' -pe matlab ' num2str(g.parallel) ' nbp_grid_shell_start_matlab.sh'];
+shcmd = [shcmd 'qsub -cwd -t ' g.jobnum ' -o '  g.out '/ -e '  g.out '/ ' g.requ ' -N ' g.job_name ' -pe matlab ' num2str(g.parallel) ' nbp_grid_shell_start_matlab.sh'];
 
 fprintf('\n%s \n',shcmd) %debug, for real result ucomment
 [status,result] = system(shcmd);
