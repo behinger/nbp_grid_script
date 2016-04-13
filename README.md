@@ -34,3 +34,6 @@ changes the output/error-file path (and the temporary matlab command file) (this
 `nbp_grid_script('display(''test'');run_matlab_script','runDir','/path/to/scripts/)` 
 
 change the directory where the script files are located
+
+### Other languages
+in **R** this is somewhat simplified. See [this blog entry](http://benediktehinger.de/blog/science/sun-grid-engine-command-dump/)
