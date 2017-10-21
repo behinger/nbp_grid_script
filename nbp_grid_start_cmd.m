@@ -68,8 +68,8 @@ end
 
 s = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 numRands = length(s);
-s = RandStream('mt19937ar','Seed','shuffle');
-RandStream.setGlobalStream(s);
+rstream = RandStream('mt19937ar','Seed','shuffle');
+RandStream.setGlobalStream(rstream);
  
 sLength = 10;
 randString = s( ceil(rand(1,sLength)*numRands) );
